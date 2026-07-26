@@ -9,7 +9,9 @@
   "scripts": {
     "start": "electron .",
     "build:win": "electron-builder --win nsis",
-    "build:win:dir": "electron-builder --win dir"
+    "build:win:dir": "electron-builder --win dir",
+    "build:mac": "electron-builder --mac --arm64",
+    "build:mac:dir": "electron-builder --mac --dir --arm64"
   },
   "build": {
     "appId": "com.mineradio.lx.desktop",
@@ -60,6 +62,18 @@
       "installerHeader": "build/installerHeader.bmp",
       "include": "build/installer.nsh",
       "artifactName": "Mineradio-LX-${version}-Setup.${ext}"
+    },
+    "mac": {
+      "target": [
+        { "target": "dmg", "arch": ["arm64"] },
+        { "target": "zip", "arch": ["arm64"] }
+      ],
+      "category": "public.app-category.music",
+      "icon": "build/icon.icns",
+      "artifactName": "Mineradio-LX-${version}-${arch}.${ext}",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null
     },
     "publish": [
       {
