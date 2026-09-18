@@ -32,6 +32,12 @@ const MIN_WINDOWED_HEIGHT = 540;
 const APP_NAME = 'Mineradio';
 const APP_USER_MODEL_ID = 'com.mineradio.desktop';
 const APP_ICON_ICO = path.join(__dirname, '..', 'build', 'icon.ico');
+const APP_ICON_ICNS = path.join(__dirname, '..', 'build', 'icon.icns');
+const APP_ICON_PNG = path.join(__dirname, '..', 'build', 'icon.png');
+// BrowserWindow `icon` is consumed differently per platform; pick the best asset available.
+const APP_ICON = process.platform === 'darwin'
+  ? (fs.existsSync(APP_ICON_ICNS) ? APP_ICON_ICNS : (fs.existsSync(APP_ICON_PNG) ? APP_ICON_PNG : APP_ICON_ICO))
+  : APP_ICON_ICO;
 const NETEASE_LOGIN_PARTITION = 'persist:mineradio-netease-login';
 const NETEASE_LOGIN_URL = 'https://music.163.com/#/login';
 const QQ_LOGIN_PARTITION = 'persist:mineradio-qqmusic-login';
@@ -48,8 +54,11 @@ const CHROMIUM_PERFORMANCE_SWITCHES = [
   ['disable-renderer-backgrounding'],
   ['disable-backgrounding-occluded-windows'],
   ['force_high_performance_gpu'],
-  ['use-angle', 'd3d11'],
 ];
+// `use-angle=d3d11` is Windows-only (ANGLE/D3D11 backend). On macOS Chromium picks Metal automatically.
+if (process.platform === 'win32') {
+  CHROMIUM_PERFORMANCE_SWITCHES.push(['use-angle', 'd3d11']);
+}
 for (const [name, value] of CHROMIUM_PERFORMANCE_SWITCHES) {
   if (value == null) app.commandLine.appendSwitch(name);
   else app.commandLine.appendSwitch(name, value);
@@ -417,7 +426,7 @@ async function openNeteaseMusicLoginWindow(owner) {
       autoHideMenuBar: true,
       title: '网易云音乐登录',
       backgroundColor: '#111111',
-      icon: APP_ICON_ICO,
+      icon: APP_ICON,
       webPreferences: {
         partition: NETEASE_LOGIN_PARTITION,
         contextIsolation: true,
@@ -519,7 +528,7 @@ async function openQQMusicLoginWindow(owner) {
       autoHideMenuBar: true,
       title: 'QQ 音乐登录',
       backgroundColor: '#111111',
-      icon: APP_ICON_ICO,
+      icon: APP_ICON,
       webPreferences: {
         partition: QQ_LOGIN_PARTITION,
         contextIsolation: true,
@@ -940,7 +949,10 @@ function createDesktopLyricsWindow(payload = {}) {
   });
   try {
     desktopLyricsWindow.setAlwaysOnTop(true, 'screen-saver');
-    desktopLyricsWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    // macOS fullscreen apps live in their own Space; `visibleOnAllWorkspaces` has no darwin equivalent.
+    if (process.platform !== 'darwin') {
+      desktopLyricsWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    }
   } catch (e) {
     console.warn('Desktop lyrics topmost setup skipped:', e.message);
   }
@@ -1370,7 +1382,7 @@ async function createWindow() {
     hasShadow: true,
     autoHideMenuBar: true,
     title: APP_NAME,
-    icon: APP_ICON_ICO,
+    icon: APP_ICON,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
